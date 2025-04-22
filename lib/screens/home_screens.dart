@@ -1,7 +1,40 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-class HomeScreens extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../models/product_model.dart';
+
+class HomeScreens extends StatefulWidget {
   const HomeScreens({super.key});
+
+  @override
+  State<HomeScreens> createState() => _HomeScreensState();
+}
+
+class _HomeScreensState extends State<HomeScreens> {
+List<ProductModel> _products =[];
+
+  @override
+  void initState(){
+    super.initState();
+    fetchProducts();
+  }
+
+  Future<void> fetchProducts() async {
+    final response = await http.get(
+      Uri.parse('https://fakestoreapi.com/products')
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+
+      setState(() {
+        _products = data.map((json) => ProductModel.fromJson(json)).toList();
+      });
+    } else {
+      throw Exception('gagal mengambil data');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,8 +49,10 @@ class HomeScreens extends StatelessWidget {
             childAspectRatio: 0.7,
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
-            ), itemCount: 10, 
+            ), itemCount: _products.length, 
             itemBuilder : (context, index){
+              final product = _products[index];
+
               return Card(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,7 +60,7 @@ class HomeScreens extends StatelessWidget {
                     Container(
                       height: 150,
                       width: double.infinity,
-                      child: Image.network('https://static.promediateknologi.id/crop/0x0:0x0/0x0/webp/photo/p2/214/2024/09/11/10-2518875220.jpg',
+                      child: Image.network(product.image,
                       fit: BoxFit.cover
                       ),
                     ),
@@ -34,7 +69,7 @@ class HomeScreens extends StatelessWidget {
                       horizontal: 8,
                       vertical: 4
                       ),
-                      child: Text('Kategori ${index + 1}',
+                      child: Text(product.category,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey
@@ -46,10 +81,11 @@ class HomeScreens extends StatelessWidget {
                       horizontal: 8,
                       vertical: 4
                       ),
-                      child: Text('Produk ${index + 1}',
+                      child: Text(product.title,
                       style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold, 
+                        overflow: TextOverflow.fade
                        ),
                       )
                     ),
@@ -58,7 +94,7 @@ class HomeScreens extends StatelessWidget {
                       horizontal: 8,
                       vertical: 4
                       ),
-                      child: Text('\$20.0',
+                      child: Text('\Rp${product.price}',
                       style: TextStyle(
                         color: Colors.grey
                        ),
